@@ -7,10 +7,6 @@ if os.environ.get("PJRT_DEVICE"):
     import torch_xla.experimental.pjrt_backend  # Needed for init_process_group even though otherwise unused.
 
 
-# def init_xla():
-#     # Using PJRT dist so that calls like dist.get_rank() work.
-#     dist.init_process_group("xla", init_method="pjrt://")
-
 def init_xla_dist():
     # Using PJRT dist so that calls like dist.get_rank() work.
     dist.init_process_group(

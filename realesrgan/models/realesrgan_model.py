@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import torch
+from torch.nn.parallel import DistributedDataParallel
 from basicsr.data.degradations import random_add_gaussian_noise_pt, random_add_poisson_noise_pt
 from basicsr.data.transforms import paired_random_crop
 from basicsr.models.srgan_model import SRGANModel
@@ -9,7 +10,11 @@ from basicsr.utils.img_process_util import filter2D
 from basicsr.utils.registry import MODEL_REGISTRY
 from collections import OrderedDict
 from torch.nn import functional as F
+from realesrgan.xla_utils import is_xla
 
+if is_xla():
+    from torch_xla.core import xla_model
+    from torch_xla.experimental import pjrt
 
 @MODEL_REGISTRY.register()
 class RealESRGANModel(SRGANModel):
@@ -25,6 +30,29 @@ class RealESRGANModel(SRGANModel):
         self.jpeger = DiffJPEG(differentiable=False).cuda()  # simulate JPEG compression artifacts
         self.usm_sharpener = USMSharp().cuda()  # do usm sharpening
         self.queue_size = opt.get('queue_size', 180)
+
+    def init_training_settings(self):
+        """Extending from SRGANModel to set
+        """
+        if is_xla():
+            self.device = xla_model.xla_device()
+        self.net_g = self.model_to_device(self.net_g) # Possibly move net_g to XLA device
+        super(RealESRGANModel, self).init_training_settings() # Will move net_d to XLA device
+
+    def model_to_device(self, net):
+        """Overwriting SRGANModel.model_to_device() to wrap XLA DDP correctly.
+
+        Model to device. It also warps models with DistributedDataParallel
+        or DataParallel.
+
+        Args:
+            net (nn.Module)
+        """
+        net = net.to(self.device)
+        assert not (self.opt["dist"] ^ is_xla()), "Distributed and XLA go together in our implementation."
+        if self.opt['dist']:
+            net = DistributedDataParallel(net, gradient_as_bucket_view=True) # XLA needs gradient_as_bucket_view
+        return net
 
     @torch.no_grad()
     def _dequeue_and_enqueue(self):
@@ -232,6 +260,8 @@ class RealESRGANModel(SRGANModel):
 
             l_g_total.backward()
             self.optimizer_g.step()
+            if is_xla(): # Mark step in XLA
+                xla_model.mark_step()
 
         # optimize net_d
         for p in self.net_d.parameters():
@@ -251,6 +281,8 @@ class RealESRGANModel(SRGANModel):
         loss_dict['out_d_fake'] = torch.mean(fake_d_pred.detach())
         l_d_fake.backward()
         self.optimizer_d.step()
+        if is_xla(): # Mark step in XLA
+                xla_model.mark_step()
 
         if self.ema_decay > 0:
             self.model_ema(decay=self.ema_decay)

@@ -6,14 +6,7 @@ import yaml
 import random
 import os
 from basicsr.utils.options import ordered_yaml, get_dist_info, set_random_seed, _postprocess_yml_value
-
-def init_xla_dist():
-    rank = int(os.environ['RANK'])
-    world_size = int(os.environ['WORLD_SIZE'])
-    # num_gpus = torch.cuda.device_count()
-    # torch.cuda.set_device(rank % num_gpus)
-    # TODO: Try gloo/nccl and spawn/fork combinations
-    dist.init_process_group(backend="gloo", rank=rank, world_size=world_size)
+from realesrgan.xla_utils import is_xla, init_xla_dist
 
 # Copied and adapted to use custom distributed settings for XLA.
 def parse_options(root_path, is_train=True):
@@ -41,11 +34,15 @@ def parse_options(root_path, is_train=True):
     #         init_dist(args.launcher, **opt['dist_params'])
     #     else:
     #         init_dist(args.launcher)
-    if args.launcher == "pytorch": # TODO: Make sure to use launcher
+    if args.launcher: #
+        raise NotImplementedError("Removed GPU launcher for now.")
+
+    if is_xla(): # Assuming XLA is always distributed
         init_xla_dist()
         opt['dist'] = True
     else:
         opt['dist'] = False
+
     opt['rank'], opt['world_size'] = get_dist_info()
 
     # random seed
