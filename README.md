@@ -16,6 +16,7 @@ unzip DIV2K_train_HR.zip && rm DIV2K_train_HR.zip
 ### Generate mock LQ images
 The images are simply downscaled by a 4x factor.
 ```
+# From the project root
 python3 scripts/generate_mock_lq.py data/DIV2K_train_HR/ data/DIV2K_train_LQ
 ```
 
