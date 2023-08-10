@@ -2,7 +2,7 @@
 name: TPU_PairedData
 model_type: RealESRGANModel
 scale: 4
-num_gpu: 1
+num_gpu: 0 # NOTE: Set to 0 to disable GPU
 manual_seed: 0
 
 # USM the ground-truth

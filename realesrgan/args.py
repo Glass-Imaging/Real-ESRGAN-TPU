@@ -6,7 +6,7 @@ import yaml
 import random
 import os
 from basicsr.utils.options import ordered_yaml, get_dist_info, set_random_seed, _postprocess_yml_value
-from realesrgan.xla_utils import is_xla, init_xla_dist
+from realesrgan.xla_utils import is_xla, init_xla_dist, is_distributed_xla
 
 # Copied and adapted to use custom distributed settings for XLA.
 def parse_options(root_path, is_train=True):
@@ -34,10 +34,10 @@ def parse_options(root_path, is_train=True):
     #         init_dist(args.launcher, **opt['dist_params'])
     #     else:
     #         init_dist(args.launcher)
-    if args.launcher: #
-        raise NotImplementedError("Removed GPU launcher for now.")
+    if args.launcher != "none":
+        raise NotImplementedError("Removed launcher for now.")
 
-    if is_xla(): # Assuming XLA is always distributed
+    if is_distributed_xla(): # Assuming dist is only XLA
         init_xla_dist()
         opt['dist'] = True
     else:

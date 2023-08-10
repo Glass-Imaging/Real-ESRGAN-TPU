@@ -138,6 +138,10 @@ def train_pipeline(root_path):
     if tb_logger:
         tb_logger.close()
 
-if __name__ == '__main__':
+def main(mp_index):
     root_path = osp.abspath(osp.join(__file__, osp.pardir, osp.pardir))
     train_pipeline(root_path)
+
+
+if __name__ == '__main__':
+    main(0)
