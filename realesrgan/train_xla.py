@@ -7,7 +7,7 @@ os.environ['MASTER_PORT'] = '12355'
 from realesrgan.train import main
 
 if __name__ == "__main__":
-    USE_XLA_MP = False
+    USE_XLA_MP = True
     if USE_XLA_MP:
         from torch_xla.distributed import xla_multiprocessing
 

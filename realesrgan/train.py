@@ -14,7 +14,12 @@ import realesrgan.archs
 import realesrgan.data
 import realesrgan.models
 
+
 from realesrgan.args import parse_options
+
+from realesrgan.xla_utils import is_xla
+if is_xla():
+    from torch_xla.core import xla_model
 
 # Copied and adapted to use custom parse_options for custom distributed.
 def train_pipeline(root_path):
@@ -49,6 +54,8 @@ def train_pipeline(root_path):
     result = create_train_val_dataloader(opt, logger)
     train_loader, train_sampler, val_loaders, total_epochs, total_iters = result
 
+    # UNTIL HERE: Runs through!
+
     # create model
     model = build_model(opt)
     if resume_state:  # resume training
@@ -80,6 +87,8 @@ def train_pipeline(root_path):
     data_timer, iter_timer = AvgTimer(), AvgTimer()
     start_time = time.time()
 
+    # UNTIL HERE: Runs through
+
     for epoch in range(start_epoch, total_epochs + 1):
         train_sampler.set_epoch(epoch)
         prefetcher.reset()
@@ -95,7 +104,15 @@ def train_pipeline(root_path):
             model.update_learning_rate(current_iter, warmup_iter=opt['train'].get('warmup_iter', -1))
             # training
             model.feed_data(train_data)
+
+            # UNTIL HERE: Runs through!
+
             model.optimize_parameters(current_iter)
+
+            # UNTIL HERE: Seems stuck. TODO: nohup
+            print(f"Rank {xla_model.get_ordinal()} DONE.")
+            return 0
+
             iter_timer.record()
             if current_iter == 1:
                 # reset start time in msg_logger for more accurate eta_time

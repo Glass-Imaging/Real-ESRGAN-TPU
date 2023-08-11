@@ -36,7 +36,6 @@ class RealESRGANModel(SRGANModel):
         """
         if is_xla():
             self.device = xla_model.xla_device()
-            print("Set XLA device.")
         self.net_g = self.model_to_device(self.net_g) # Possibly move net_g to XLA device
         super(RealESRGANModel, self).init_training_settings() # Will move net_d to XLA device
 
@@ -50,7 +49,8 @@ class RealESRGANModel(SRGANModel):
             net (nn.Module)
         """
         net = net.to(self.device)
-        if self.opt['dist']:
+        # Can only move models on XLA device that way. model_to_device() is called in super constructor and should not move at that time.
+        if self.opt['dist'] and self.device.type == "xla":
             net = DistributedDataParallel(net, gradient_as_bucket_view=True) # XLA needs gradient_as_bucket_view
         return net
 

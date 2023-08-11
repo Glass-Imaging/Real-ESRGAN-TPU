@@ -27,3 +27,18 @@ We use paired data for now as it skips the GPU-based degradations, keeping thing
 # From the project root
 python3 scripts/generate_meta_info_pairdata.py --input data/DIV2K_train_HR data/DIV2K_train_LQ/ --meta_info data/meta_info/DIV2K-paired.txt
 ```
+
+## Running
+The demo run should work on both GPU (always worked), single-process TPU (just for easier testing) and multi-process TPU (what we actually want.)
+
+### Running on GPU
+```
+# From the root. CUDA_VISIBLE_DEVICES is needed to disable DDP wrapping for now.
+CUDA_VISIBLE_DEVICES=0 python3 -m realesrgan.train -opt options/GPU_paired-data.yml
+```
+
+### Running on GPU
+```
+# From the root. Single/multi process XLA can be set in train_xla.py
+python3 -m realesrgan.train_xla -opt options/TPU_paired-data.yml
+```
