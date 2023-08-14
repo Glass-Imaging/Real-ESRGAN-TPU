@@ -113,23 +113,27 @@ def train_pipeline(root_path):
             # return 0
 
             iter_timer.record()
-            # if current_iter == 1:
-            #     # reset start time in msg_logger for more accurate eta_time
-            #     # not work in resume mode
-            #     msg_logger.reset_start_time()
+            if current_iter == 1:
+                # reset start time in msg_logger for more accurate eta_time
+                # not work in resume mode
+                msg_logger.reset_start_time()
 
             # log
-            # if current_iter % opt['logger']['print_freq'] == 0:
-            #     log_vars = {'epoch': epoch, 'iter': current_iter}
-            #     log_vars.update({'lrs': model.get_current_learning_rate()})
-            #     log_vars.update({'time': iter_timer.get_avg_time(), 'data_time': data_timer.get_avg_time()})
-            #     log_vars.update(model.get_current_log())
-            #     msg_logger(log_vars)
+            if current_iter % opt['logger']['print_freq'] == 0:
+                log_vars = {'epoch': epoch, 'iter': current_iter}
+                log_vars.update({'lrs': model.get_current_learning_rate()})
+                log_vars.update({'time': iter_timer.get_avg_time(), 'data_time': data_timer.get_avg_time()})
+                log_vars.update(model.get_current_log())
+                msg_logger(log_vars)
+                if is_xla:
+                    xla_model.master_print(log_vars)
 
             # save models and training states
-            # if current_iter % opt['logger']['save_checkpoint_freq'] == 0:
-            #     logger.info('Saving models and training states.')
-            #     model.save(epoch, current_iter)
+            if current_iter % opt['logger']['save_checkpoint_freq'] == 0:
+                logger.info('Saving models and training states.')
+                if is_xla:
+                    xla_model.master_print("Saving models and training states.")
+                model.save(epoch, current_iter)
 
             # validation
             # if opt.get('val') is not None and (current_iter % opt['val']['val_freq'] == 0):
