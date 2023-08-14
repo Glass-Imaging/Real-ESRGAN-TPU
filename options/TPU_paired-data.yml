@@ -88,7 +88,7 @@ train:
     milestones: [400000]
     gamma: 0.5
 
-  total_iter: 500
+  total_iter: 100
   warmup_iter: -1  # no warm up
 
   # losses
@@ -137,7 +137,7 @@ train:
 
 # logging settings
 logger:
-  print_freq: 50
+  print_freq: 10
   save_checkpoint_freq: !!float 5e3
   use_tb_logger: False
   wandb:

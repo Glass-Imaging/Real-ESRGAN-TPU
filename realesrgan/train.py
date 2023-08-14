@@ -103,40 +103,40 @@ def train_pipeline(root_path):
             # update learning rate
             model.update_learning_rate(current_iter, warmup_iter=opt['train'].get('warmup_iter', -1))
             # training
-            model.feed_data(train_data)
 
+            model.feed_data(train_data)
             # UNTIL HERE: Runs through!
 
             model.optimize_parameters(current_iter)
-
-            # UNTIL HERE: Seems stuck. TODO: nohup
-            print(f"Rank {xla_model.get_ordinal()} DONE.")
-            return 0
+            # UNTIL HERE: Got error once, now runs through...
+            # print(f"Rank {xla_model.get_ordinal()} DONE.")
+            # return 0
 
             iter_timer.record()
-            if current_iter == 1:
-                # reset start time in msg_logger for more accurate eta_time
-                # not work in resume mode
-                msg_logger.reset_start_time()
+            # if current_iter == 1:
+            #     # reset start time in msg_logger for more accurate eta_time
+            #     # not work in resume mode
+            #     msg_logger.reset_start_time()
+
             # log
-            if current_iter % opt['logger']['print_freq'] == 0:
-                log_vars = {'epoch': epoch, 'iter': current_iter}
-                log_vars.update({'lrs': model.get_current_learning_rate()})
-                log_vars.update({'time': iter_timer.get_avg_time(), 'data_time': data_timer.get_avg_time()})
-                log_vars.update(model.get_current_log())
-                msg_logger(log_vars)
+            # if current_iter % opt['logger']['print_freq'] == 0:
+            #     log_vars = {'epoch': epoch, 'iter': current_iter}
+            #     log_vars.update({'lrs': model.get_current_learning_rate()})
+            #     log_vars.update({'time': iter_timer.get_avg_time(), 'data_time': data_timer.get_avg_time()})
+            #     log_vars.update(model.get_current_log())
+            #     msg_logger(log_vars)
 
             # save models and training states
-            if current_iter % opt['logger']['save_checkpoint_freq'] == 0:
-                logger.info('Saving models and training states.')
-                model.save(epoch, current_iter)
+            # if current_iter % opt['logger']['save_checkpoint_freq'] == 0:
+            #     logger.info('Saving models and training states.')
+            #     model.save(epoch, current_iter)
 
             # validation
-            if opt.get('val') is not None and (current_iter % opt['val']['val_freq'] == 0):
-                if len(val_loaders) > 1:
-                    logger.warning('Multiple validation datasets are *only* supported by SRModel.')
-                for val_loader in val_loaders:
-                    model.validation(val_loader, current_iter, tb_logger, opt['val']['save_img'])
+            # if opt.get('val') is not None and (current_iter % opt['val']['val_freq'] == 0):
+            #     if len(val_loaders) > 1:
+            #         logger.warning('Multiple validation datasets are *only* supported by SRModel.')
+            #     for val_loader in val_loaders:
+            #         model.validation(val_loader, current_iter, tb_logger, opt['val']['save_img'])
 
             data_timer.start()
             iter_timer.start()
@@ -144,6 +144,8 @@ def train_pipeline(root_path):
         # end of iter
 
     # end of epoch
+
+    print(f"Rank {xla_model.get_ordinal()} DONE.")
 
     consumed_time = str(datetime.timedelta(seconds=int(time.time() - start_time)))
     logger.info(f'End of training. Time consumed: {consumed_time}')

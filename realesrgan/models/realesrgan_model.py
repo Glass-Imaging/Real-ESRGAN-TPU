@@ -288,3 +288,16 @@ class RealESRGANModel(SRGANModel):
             self.model_ema(decay=self.ema_decay)
 
         self.log_dict = self.reduce_loss_dict(loss_dict)
+
+    def reduce_loss_dict(self, loss_dict):
+        """Overwritten from BaseModel to skip the reduction
+        """
+        with torch.no_grad():
+            if self.opt['dist']:
+                pass # Removed here for now.
+
+            log_dict = OrderedDict()
+            for name, value in loss_dict.items():
+                log_dict[name] = value.mean().item()
+
+            return log_dict
