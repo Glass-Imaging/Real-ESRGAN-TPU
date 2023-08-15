@@ -126,7 +126,9 @@ def train_pipeline(root_path):
                 log_vars.update(model.get_current_log())
                 msg_logger(log_vars)
                 if is_xla:
-                    xla_model.master_print(log_vars)
+                    # xla_model.master_print(log_vars)
+                    xla_model.master_print(f"Iter {current_iter}, iter time: {iter_timer.get_avg_time():0.03f}, data time: {data_timer.get_avg_time():0.03f}.")
+                    # xla_model.master_print("")
 
             # save models and training states
             if current_iter % opt['logger']['save_checkpoint_freq'] == 0:
