@@ -20,6 +20,7 @@ from realesrgan.args import parse_options
 from realesrgan.xla_utils import is_xla
 if is_xla():
     from torch_xla.core import xla_model
+    from torch_xla.distributed.parallel_loader import MpDeviceLoader
 
 # Copied and adapted to use custom parse_options for custom distributed.
 def train_pipeline(root_path):
@@ -89,12 +90,16 @@ def train_pipeline(root_path):
 
     # UNTIL HERE: Runs through
 
-    for epoch in range(start_epoch, total_epochs + 1):
-        train_sampler.set_epoch(epoch)
-        prefetcher.reset()
-        train_data = prefetcher.next()
+    if is_xla():
+        train_loader = MpDeviceLoader(train_loader, xla_model.xla_device())
 
-        while train_data is not None:
+    for epoch in range(start_epoch, total_epochs + 1):
+        # train_sampler.set_epoch(epoch)
+        # prefetcher.reset()
+        # train_data = prefetcher.next()
+
+        # while train_data is not None:
+        for train_data in train_loader:
             data_timer.record()
 
             current_iter += 1
@@ -146,7 +151,7 @@ def train_pipeline(root_path):
 
             data_timer.start()
             iter_timer.start()
-            train_data = prefetcher.next()
+            # train_data = prefetcher.next()
         # end of iter
 
     # end of epoch
