@@ -27,9 +27,9 @@ class UNetDiscriminatorSN(nn.Module):
         self.conv2 = norm(nn.Conv2d(num_feat * 2, num_feat * 4, 4, 2, 1, bias=False))
         self.conv3 = norm(nn.Conv2d(num_feat * 4, num_feat * 8, 4, 2, 1, bias=False))
         # upsample
-        # self.conv4 = norm(nn.Conv2d(num_feat * 8, num_feat * 4, 3, 1, 1, bias=False))
-        # self.conv5 = norm(nn.Conv2d(num_feat * 4, num_feat * 2, 3, 1, 1, bias=False))
-        # self.conv6 = norm(nn.Conv2d(num_feat * 2, num_feat, 3, 1, 1, bias=False))
+        self.conv4 = norm(nn.Conv2d(num_feat * 8, num_feat * 4, 3, 1, 1, bias=False))
+        self.conv5 = norm(nn.Conv2d(num_feat * 4, num_feat * 2, 3, 1, 1, bias=False))
+        self.conv6 = norm(nn.Conv2d(num_feat * 2, num_feat, 3, 1, 1, bias=False))
         self.conv4_up = nn.ConvTranspose2d(num_feat * 8, num_feat * 8, kernel_size=2, stride=2)
         self.conv5_up = nn.ConvTranspose2d(num_feat * 4, num_feat * 4, kernel_size=2, stride=2)
         self.conv6_up = nn.ConvTranspose2d(num_feat * 2, num_feat * 2, kernel_size=2, stride=2)

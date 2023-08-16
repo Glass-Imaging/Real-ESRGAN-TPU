@@ -310,5 +310,3 @@ class RealESRGANModel(SRGANModel):
                 log_dict[name] = value.mean().item()
 
             return log_dict
-
-        from basicsr.archs.rrdbnet_arch import *

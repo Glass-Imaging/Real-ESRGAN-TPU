@@ -1,4 +1,5 @@
 # flake8: noqa
+import os
 import os.path as osp
 import time
 import datetime
@@ -17,7 +18,7 @@ import realesrgan.models
 
 from realesrgan.args import parse_options
 
-from realesrgan.xla_utils import is_xla
+from realesrgan.xla_utils import is_xla, is_xla_master
 if is_xla():
     from torch_xla.core import xla_model
     from torch_xla.distributed.parallel_loader import MpDeviceLoader
@@ -26,8 +27,11 @@ if is_xla():
 
 # Copied and adapted to use custom parse_options for custom distributed.
 def train_pipeline(root_path):
-    if is_xla():
+    if is_xla_master():
+        # os.environ["PT_XLA_DEBUG"] = "1"
+        # os.environ["USE_TORCH"] = "ON"
         server = xla_profiler.start_server(9012)
+
 
     # parse options, set distributed setting, set random seed
     opt, args = parse_options(root_path, is_train=True)
@@ -95,8 +99,8 @@ def train_pipeline(root_path):
 
     # UNTIL HERE: Runs through
 
-    # if is_xla():
-    #     train_loader = MpDeviceLoader(train_loader, xla_model.xla_device())
+    if is_xla():
+        train_loader = MpDeviceLoader(train_loader, xla_model.xla_device())
 
     for epoch in range(start_epoch, total_epochs + 1):
         # train_sampler.set_epoch(epoch)
@@ -173,8 +177,9 @@ def train_pipeline(root_path):
     if tb_logger:
         tb_logger.close()
 
-    print("")
-    print(xla_metrics.metrics_report())
+    if is_xla_master():
+        print("")
+        print(xla_metrics.metrics_report())
 
 def main(mp_index):
     root_path = osp.abspath(osp.join(__file__, osp.pardir, osp.pardir))

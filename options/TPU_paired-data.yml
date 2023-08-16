@@ -45,7 +45,7 @@ datasets:
 
 # network structures
 network_g:
-  type: RRDBNet
+  type: RRDBNet2
   num_in_ch: 3
   num_out_ch: 3
   num_feat: 32
@@ -88,7 +88,7 @@ train:
     milestones: [400000]
     gamma: 0.5
 
-  total_iter: 100
+  total_iter: 200
   warmup_iter: -1  # no warm up
 
   # losses

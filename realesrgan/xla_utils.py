@@ -23,3 +23,9 @@ def is_xla() -> bool:
 def is_distributed_xla() -> bool:
     # xrt_world_size works before dist.init_process_group
     return is_xla() and xla_model.xrt_world_size() > 1  # TODO: Or check dist init pjrt:// ?
+
+def is_xla_master():
+    if not is_xla():
+        return False
+    else:
+        return xla_model.get_ordinal() == 0
