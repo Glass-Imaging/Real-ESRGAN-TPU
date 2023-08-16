@@ -27,9 +27,12 @@ class UNetDiscriminatorSN(nn.Module):
         self.conv2 = norm(nn.Conv2d(num_feat * 2, num_feat * 4, 4, 2, 1, bias=False))
         self.conv3 = norm(nn.Conv2d(num_feat * 4, num_feat * 8, 4, 2, 1, bias=False))
         # upsample
-        self.conv4 = norm(nn.Conv2d(num_feat * 8, num_feat * 4, 3, 1, 1, bias=False))
-        self.conv5 = norm(nn.Conv2d(num_feat * 4, num_feat * 2, 3, 1, 1, bias=False))
-        self.conv6 = norm(nn.Conv2d(num_feat * 2, num_feat, 3, 1, 1, bias=False))
+        # self.conv4 = norm(nn.Conv2d(num_feat * 8, num_feat * 4, 3, 1, 1, bias=False))
+        # self.conv5 = norm(nn.Conv2d(num_feat * 4, num_feat * 2, 3, 1, 1, bias=False))
+        # self.conv6 = norm(nn.Conv2d(num_feat * 2, num_feat, 3, 1, 1, bias=False))
+        self.conv4_up = nn.ConvTranspose2d(num_feat * 8, num_feat * 8, kernel_size=2, stride=2)
+        self.conv5_up = nn.ConvTranspose2d(num_feat * 4, num_feat * 4, kernel_size=2, stride=2)
+        self.conv6_up = nn.ConvTranspose2d(num_feat * 2, num_feat * 2, kernel_size=2, stride=2)
         # extra convolutions
         self.conv7 = norm(nn.Conv2d(num_feat, num_feat, 3, 1, 1, bias=False))
         self.conv8 = norm(nn.Conv2d(num_feat, num_feat, 3, 1, 1, bias=False))
@@ -43,17 +46,20 @@ class UNetDiscriminatorSN(nn.Module):
         x3 = F.leaky_relu(self.conv3(x2), negative_slope=0.2, inplace=True)
 
         # upsample
-        x3 = F.interpolate(x3, scale_factor=2, mode='bilinear', align_corners=False)
+        # x3 = F.interpolate(x3, scale_factor=2, mode='bilinear', align_corners=False)
+        x3 = self.conv4_up(x3)
         x4 = F.leaky_relu(self.conv4(x3), negative_slope=0.2, inplace=True)
 
         if self.skip_connection:
             x4 = x4 + x2
-        x4 = F.interpolate(x4, scale_factor=2, mode='bilinear', align_corners=False)
+        # x4 = F.interpolate(x4, scale_factor=2, mode='bilinear', align_corners=False)
+        x4 = self.conv5_up(x4)
         x5 = F.leaky_relu(self.conv5(x4), negative_slope=0.2, inplace=True)
 
         if self.skip_connection:
             x5 = x5 + x1
-        x5 = F.interpolate(x5, scale_factor=2, mode='bilinear', align_corners=False)
+        # x5 = F.interpolate(x5, scale_factor=2, mode='bilinear', align_corners=False)
+        x5 = self.conv6_up(x5)
         x6 = F.leaky_relu(self.conv6(x5), negative_slope=0.2, inplace=True)
 
         if self.skip_connection:

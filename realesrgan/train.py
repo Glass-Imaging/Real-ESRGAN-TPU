@@ -21,9 +21,14 @@ from realesrgan.xla_utils import is_xla
 if is_xla():
     from torch_xla.core import xla_model
     from torch_xla.distributed.parallel_loader import MpDeviceLoader
+    from torch_xla.debug import profiler as xla_profiler
+    from torch_xla.debug import metrics as xla_metrics
 
 # Copied and adapted to use custom parse_options for custom distributed.
 def train_pipeline(root_path):
+    if is_xla():
+        server = xla_profiler.start_server(9012)
+
     # parse options, set distributed setting, set random seed
     opt, args = parse_options(root_path, is_train=True)
     opt['root_path'] = root_path
@@ -46,8 +51,8 @@ def train_pipeline(root_path):
     # Otherwise the logger will not be properly initialized
     log_file = osp.join(opt['path']['log'], f"train_{opt['name']}_{get_time_str()}.log")
     logger = get_root_logger(logger_name='basicsr', log_level=logging.INFO, log_file=log_file)
-    logger.info(get_env_info())
-    logger.info(dict2str(opt))
+    # logger.info(get_env_info())
+    # logger.info(dict2str(opt))
     # initialize wandb and tb loggers
     tb_logger = init_tb_loggers(opt)
 
@@ -90,8 +95,8 @@ def train_pipeline(root_path):
 
     # UNTIL HERE: Runs through
 
-    if is_xla():
-        train_loader = MpDeviceLoader(train_loader, xla_model.xla_device())
+    # if is_xla():
+    #     train_loader = MpDeviceLoader(train_loader, xla_model.xla_device())
 
     for epoch in range(start_epoch, total_epochs + 1):
         # train_sampler.set_epoch(epoch)
@@ -167,6 +172,9 @@ def train_pipeline(root_path):
             model.validation(val_loader, current_iter, tb_logger, opt['val']['save_img'])
     if tb_logger:
         tb_logger.close()
+
+    print("")
+    print(xla_metrics.metrics_report())
 
 def main(mp_index):
     root_path = osp.abspath(osp.join(__file__, osp.pardir, osp.pardir))

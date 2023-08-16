@@ -15,6 +15,7 @@ from realesrgan.xla_utils import is_xla
 if is_xla():
     from torch_xla.core import xla_model
     from torch_xla.experimental import pjrt
+    from torch_xla.debug import profiler as xla_profiler
 
 @MODEL_REGISTRY.register()
 class RealESRGANModel(SRGANModel):
@@ -233,7 +234,12 @@ class RealESRGANModel(SRGANModel):
             p.requires_grad = False
 
         self.optimizer_g.zero_grad()
-        self.output = self.net_g(self.lq)
+
+        if is_xla():
+            with xla_profiler.StepTrace('net_g', step_num=current_iter):
+                self.output = self.net_g(self.lq)
+        else:
+            self.output = self.net_g(self.lq)
 
         l_g_total = 0
         loss_dict = OrderedDict()
@@ -281,13 +287,16 @@ class RealESRGANModel(SRGANModel):
         loss_dict['out_d_fake'] = torch.mean(fake_d_pred.detach())
         l_d_fake.backward()
         self.optimizer_d.step()
+
         if is_xla(): # Mark step in XLA
                 xla_model.mark_step()
 
         if self.ema_decay > 0:
             self.model_ema(decay=self.ema_decay)
 
-        self.log_dict = self.reduce_loss_dict(loss_dict)
+        # self.log_dict = self.reduce_loss_dict(loss_dict)
+        # Disabled to remove calls to .item()
+        self.log_dict = {}
 
     def reduce_loss_dict(self, loss_dict):
         """Overwritten from BaseModel to skip the reduction
@@ -301,3 +310,5 @@ class RealESRGANModel(SRGANModel):
                 log_dict[name] = value.mean().item()
 
             return log_dict
+
+        from basicsr.archs.rrdbnet_arch import *
