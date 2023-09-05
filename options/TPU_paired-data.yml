@@ -16,7 +16,7 @@ high_order_degradation: False # do not use the high-order degradation generation
 datasets:
   train:
     name: DIV2K
-    type: RealESRGANPairedDataset
+    type: SimpleDataset
     dataroot_gt: data
     dataroot_lq: data
     meta_info: data/meta_info/DIV2K-paired.txt
