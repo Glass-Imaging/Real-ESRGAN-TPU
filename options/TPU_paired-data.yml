@@ -30,7 +30,7 @@ datasets:
     # data loader
     use_shuffle: true
     num_worker_per_gpu: 8
-    batch_size_per_gpu: 16
+    batch_size_per_gpu: 8
     dataset_enlarge_ratio: 1
     prefetch_mode: ~
 
@@ -48,8 +48,8 @@ network_g:
   type: RRDBNet2
   num_in_ch: 3
   num_out_ch: 3
+  num_block: 16
   num_feat: 32
-  num_block: 8
   num_grow_ch: 16
 
 network_d:
