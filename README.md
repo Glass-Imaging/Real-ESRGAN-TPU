@@ -20,14 +20,6 @@ The images are simply downscaled by a 4x factor.
 python3 scripts/generate_mock_lq.py data/DIV2K_train_HR/ data/DIV2K_train_LQ
 ```
 
-### Generate meta file (list of image paths)
-We use paired data for now as it skips the GPU-based degradations, keeping things a little simpler.
-> This is no sophisticated SR training - inputs are simply downscaled!
-```
-# From the project root
-python3 scripts/generate_meta_info_pairdata.py --input data/DIV2K_train_HR data/DIV2K_train_LQ/ --meta_info data/meta_info/DIV2K-paired.txt
-```
-
 ## Running
 The demo run should work on both GPU (always worked), single-process TPU (just for easier testing) and multi-process TPU (what we actually want.)
 

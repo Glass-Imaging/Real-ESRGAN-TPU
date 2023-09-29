@@ -6,6 +6,7 @@ import glob
 from torch.utils import data as data
 from torchvision.transforms import ToTensor
 from basicsr.utils.registry import DATASET_REGISTRY
+import time
 
 
 @DATASET_REGISTRY.register()
@@ -29,6 +30,7 @@ class SimpleDataset(data.Dataset):
         return len(self.lq_paths)
 
     def __getitem__(self, index):
+        t0 = time.time()
         lq_path = self.lq_paths[index]
         gt_path = self.gt_paths[index]
 
@@ -41,4 +43,6 @@ class SimpleDataset(data.Dataset):
         img_lq = self.transform(img_lq)
         img_gt = self.transform(img_gt)
 
-        return {'lq': img_lq, 'gt': img_gt, 'lq_path': lq_path, 'gt_path': gt_path}
+        t1 = time.time()
+
+        return {'lq': img_lq, 'gt': img_gt, 'lq_path': lq_path, 'gt_path': gt_path, "ela": t1 - t0}

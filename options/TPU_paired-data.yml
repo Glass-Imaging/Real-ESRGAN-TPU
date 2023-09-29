@@ -17,8 +17,8 @@ datasets:
   train:
     name: DIV2K
     type: SimpleDataset
-    dataroot_gt: data
-    dataroot_lq: data
+    lq_path: data/DIV2K_train_LQ
+    gt_path: data/DIV2K_train_HR
     meta_info: data/meta_info/DIV2K-paired.txt
     io_backend:
       type: disk
@@ -88,7 +88,7 @@ train:
     milestones: [400000]
     gamma: 0.5
 
-  total_iter: 200
+  total_iter: 400
   warmup_iter: -1  # no warm up
 
   # losses

@@ -5,6 +5,7 @@ import time
 import datetime
 import logging
 import torch
+import numpy as np
 
 from basicsr.data.prefetch_dataloader import CPUPrefetcher, CUDAPrefetcher
 from basicsr.models import build_model
@@ -15,7 +16,6 @@ import realesrgan.archs
 import realesrgan.data
 import realesrgan.models
 
-
 from realesrgan.args import parse_options
 
 from realesrgan.xla_utils import is_xla, is_xla_master
@@ -25,13 +25,13 @@ if is_xla():
     from torch_xla.debug import profiler as xla_profiler
     from torch_xla.debug import metrics as xla_metrics
 
+
 # Copied and adapted to use custom parse_options for custom distributed.
 def train_pipeline(root_path):
     if is_xla_master():
         # os.environ["PT_XLA_DEBUG"] = "1"
         # os.environ["USE_TORCH"] = "ON"
         server = xla_profiler.start_server(9012)
-
 
     # parse options, set distributed setting, set random seed
     opt, args = parse_options(root_path, is_train=True)
@@ -111,11 +111,13 @@ def train_pipeline(root_path):
         # for train_data in train_loader:
         data_iter = iter(train_loader)
         while True:
+            if (current_iter % 100) == 0:
+                data_timer, iter_timer = AvgTimer(), AvgTimer()
             data_timer.start()
             iter_timer.start()
             try:
                 train_data = next(data_iter)
-            except:
+            except StopIteration as e:
                 break
             data_timer.record()
 
@@ -149,7 +151,10 @@ def train_pipeline(root_path):
                 msg_logger(log_vars)
                 if is_xla:
                     # xla_model.master_print(log_vars)
-                    xla_model.master_print(f"Iter {current_iter}, iter time: {iter_timer.get_avg_time():0.03f}, data time: {data_timer.get_avg_time():0.03f}.")
+                    data_ela = np.mean(train_data.cpu().numpy())
+                    xla_model.master_print(
+                        f"Iter {current_iter}, iter time: {iter_timer.get_avg_time():0.03f}, data time: {data_timer.get_avg_time():0.03f}, data ela: {data_ela}"
+                    )
                     # xla_model.master_print("")
 
             # save models and training states
@@ -188,6 +193,7 @@ def train_pipeline(root_path):
     if is_xla_master():
         print("")
         print(xla_metrics.metrics_report())
+
 
 def main(mp_index):
     root_path = osp.abspath(osp.join(__file__, osp.pardir, osp.pardir))
